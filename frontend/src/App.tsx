@@ -1,0 +1,51 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAuthStore } from './stores/authStore';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { UsersPage } from './pages/UsersPage';
+import { RolesPage } from './pages/RolesPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+export const App: React.FC = () => {
+  const { fetchProfile } = useAuthStore();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected Dashboard Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/roles" element={<RolesPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
