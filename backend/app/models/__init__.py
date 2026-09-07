@@ -24,6 +24,26 @@ from app.models.salary import (
     EmployeeSalaryComponent,
     SalaryRevision,
 )
+from app.models.payroll_run import (
+    PayrollPeriod,
+    PayrollRun,
+    PayrollEmployee,
+    PayrollEarning,
+    PayrollDeduction,
+)
+from app.models.statutory import (
+    StatutoryRule,
+    TaxRule,
+    TaxSlab,
+)
+from app.models.financial_extras import (
+    Loan,
+    LoanTransaction,
+    Advance,
+    BonusIncentive,
+    Reimbursement,
+    ReimbursementItem,
+)
 
 __all__ = [
     "Base",
@@ -58,4 +78,18 @@ __all__ = [
     "EmployeeSalary",
     "EmployeeSalaryComponent",
     "SalaryRevision",
+    "PayrollPeriod",
+    "PayrollRun",
+    "PayrollEmployee",
+    "PayrollEarning",
+    "PayrollDeduction",
+    "StatutoryRule",
+    "TaxRule",
+    "TaxSlab",
+    "Loan",
+    "LoanTransaction",
+    "Advance",
+    "BonusIncentive",
+    "Reimbursement",
+    "ReimbursementItem",
 ]

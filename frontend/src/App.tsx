@@ -13,6 +13,9 @@ import { EmployeesPage } from './pages/EmployeesPage';
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage';
 import { AttendancePage } from './pages/AttendancePage';
 import { LeavesPage } from './pages/LeavesPage';
+import { SalaryStructuresPage } from './pages/SalaryStructuresPage';
+import { PayrollEnginePage } from './pages/PayrollEnginePage';
+import { TaxStatutoryPage } from './pages/TaxStatutoryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -49,6 +52,9 @@ export const App: React.FC = () => {
               <Route path="/employees/:id" element={<EmployeeDetailPage />} />
               <Route path="/attendance" element={<AttendancePage />} />
               <Route path="/leaves" element={<LeavesPage />} />
+              <Route path="/salary-structures" element={<SalaryStructuresPage />} />
+              <Route path="/payroll" element={<PayrollEnginePage />} />
+              <Route path="/tax-statutory" element={<TaxStatutoryPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
