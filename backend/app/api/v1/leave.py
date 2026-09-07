@@ -12,6 +12,10 @@ from app.schemas.leave import (
     LeaveRequestResponse,
     HolidayCreate,
     HolidayResponse,
+    CarryForwardRequest,
+    CarryForwardResponse,
+    LeaveEncashmentRequest,
+    LeaveEncashmentResponse,
 )
 from app.services.leave_service import LeaveService
 from app.security.permissions import RequirePermission, get_current_user
@@ -55,6 +59,33 @@ def approve_or_reject_leave(
     return LeaveService.approve_or_reject_leave(db, request_id=request_id, user_id=current_user.id, data=body)
 
 
+@router.post("/requests/{request_id}/cancel", response_model=LeaveRequestResponse, status_code=status.HTTP_200_OK)
+def cancel_leave(
+    request_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("leave.apply")),
+):
+    return LeaveService.cancel_leave(db, request_id=request_id)
+
+
+@router.post("/carry-forward", response_model=CarryForwardResponse, status_code=status.HTTP_200_OK)
+def process_carry_forward(
+    body: CarryForwardRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return LeaveService.process_carry_forward(db, req=body)
+
+
+@router.post("/encash", response_model=LeaveEncashmentResponse, status_code=status.HTTP_200_OK)
+def encash_leave(
+    body: LeaveEncashmentRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("leave.apply")),
+):
+    return LeaveService.encash_leave(db, req=body)
+
+
 # --- Holidays ---
 @router.get("/holidays", response_model=List[HolidayResponse], status_code=status.HTTP_200_OK)
 def list_holidays(company_id: int = 1, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
@@ -64,3 +95,4 @@ def list_holidays(company_id: int = 1, db: Session = Depends(get_db), _: User = 
 @router.post("/holidays", response_model=HolidayResponse, status_code=status.HTTP_201_CREATED)
 def create_holiday(body: HolidayCreate, db: Session = Depends(get_db), _: User = Depends(RequirePermission("attendance.manage"))):
     return LeaveService.create_holiday(db, body)
+

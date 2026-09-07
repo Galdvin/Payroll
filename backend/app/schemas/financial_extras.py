@@ -25,6 +25,12 @@ class LoanResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LoanRepaymentRequest(BaseModel):
+    amount: float
+    transaction_type: str = "EARLY_SETTLEMENT"  # EMI_DEDUCTION, EARLY_SETTLEMENT, PARTIAL_REPAYMENT
+
+
+
 class AdvanceRequestCreate(BaseModel):
     employee_id: int
     amount: float = Field(..., example=15000.0)

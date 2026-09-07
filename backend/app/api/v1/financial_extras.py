@@ -36,6 +36,17 @@ def approve_loan(loan_id: int, db: Session = Depends(get_db), _: User = Depends(
     return FinancialExtrasService.approve_loan(db, loan_id=loan_id)
 
 
+@router.post("/loans/{loan_id}/cancel", response_model=LoanResponse, status_code=status.HTTP_200_OK)
+def cancel_loan(loan_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.cancel_loan(db, loan_id=loan_id)
+
+
+@router.post("/loans/{loan_id}/repay", response_model=LoanResponse, status_code=status.HTTP_200_OK)
+def record_repayment(loan_id: int, body: LoanRepaymentRequest, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.record_repayment(db, loan_id=loan_id, req=body)
+
+
+
 # --- Advances ---
 @router.get("/advances", response_model=List[AdvanceResponse], status_code=status.HTTP_200_OK)
 def list_advances(employee_id: Optional[int] = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
@@ -56,6 +67,12 @@ def list_bonuses(employee_id: Optional[int] = None, db: Session = Depends(get_db
 @router.post("/bonuses", response_model=BonusIncentiveResponse, status_code=status.HTTP_201_CREATED)
 def create_bonus(body: BonusIncentiveCreate, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
     return FinancialExtrasService.create_bonus(db, body)
+
+
+@router.post("/bonuses/{bonus_id}/cancel", response_model=BonusIncentiveResponse, status_code=status.HTTP_200_OK)
+def cancel_bonus(bonus_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.cancel_bonus(db, bonus_id=bonus_id)
+
 
 
 # --- Reimbursements ---

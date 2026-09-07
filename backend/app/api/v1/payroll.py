@@ -68,3 +68,17 @@ def approve_payroll_run(run_id: int, db: Session = Depends(get_db), _: User = De
 def lock_payroll_run(run_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.lock"))):
     """Lock finalized payroll run preventing any future modifications."""
     return PayrollEngineService.lock_payroll_run(db, run_id=run_id)
+
+
+@router.post("/runs/{run_id}/unlock", response_model=PayrollRunResponse, status_code=status.HTTP_200_OK)
+def unlock_payroll_run(run_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.unlock"))):
+    """Unlock locked payroll run with authorized permission."""
+    return PayrollEngineService.unlock_payroll_run(db, run_id=run_id)
+
+
+
+@router.post("/runs/{run_id}/status", response_model=PayrollRunResponse, status_code=status.HTTP_200_OK)
+def update_payroll_run_status(run_id: int, target_status: str, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.approve"))):
+    """Transition payroll run through the 12-stage approval & disbursement lifecycle."""
+    return PayrollEngineService.update_run_status(db, run_id=run_id, status_str=target_status)
+

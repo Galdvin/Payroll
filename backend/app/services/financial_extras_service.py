@@ -66,11 +66,44 @@ class FinancialExtrasService:
         return loan
 
     @staticmethod
+    def cancel_loan(db: Session, loan_id: int) -> Loan:
+        loan = db.query(Loan).filter(Loan.id == loan_id).first()
+        if not loan:
+            raise ResourceNotFoundException("Loan", loan_id)
+        loan.status = "Cancelled"
+        db.commit()
+        db.refresh(loan)
+        return loan
+
+    @staticmethod
+    def record_repayment(db: Session, loan_id: int, req: LoanRepaymentRequest) -> Loan:
+        loan = db.query(Loan).filter(Loan.id == loan_id).first()
+        if not loan:
+            raise ResourceNotFoundException("Loan", loan_id)
+
+        tx = LoanTransaction(
+            loan_id=loan.id,
+            amount=req.amount,
+            transaction_type=req.transaction_type,
+            transaction_date=date.today(),
+        )
+        db.add(tx)
+
+        loan.outstanding_amount = max(0.0, float(loan.outstanding_amount) - req.amount)
+        if loan.outstanding_amount <= 0:
+            loan.status = "Settled"
+
+        db.commit()
+        db.refresh(loan)
+        return loan
+
+    @staticmethod
     def get_loans(db: Session, employee_id: Optional[int] = None) -> List[Loan]:
         query = db.query(Loan)
         if employee_id:
             query = query.filter(Loan.employee_id == employee_id)
         return query.order_by(Loan.id.desc()).all()
+
 
     # --- Advances ---
     @staticmethod
@@ -120,6 +153,17 @@ class FinancialExtrasService:
         if employee_id:
             query = query.filter(BonusIncentive.employee_id == employee_id)
         return query.order_by(BonusIncentive.id.desc()).all()
+
+    @staticmethod
+    def cancel_bonus(db: Session, bonus_id: int) -> BonusIncentive:
+        bonus = db.query(BonusIncentive).filter(BonusIncentive.id == bonus_id).first()
+        if not bonus:
+            raise ResourceNotFoundException("BonusIncentive", bonus_id)
+        bonus.status = "Cancelled"
+        db.commit()
+        db.refresh(bonus)
+        return bonus
+
 
     # --- Reimbursements & Approvals ---
     @staticmethod

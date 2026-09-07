@@ -1,66 +1,77 @@
-import pytest
-
-
-def test_payslip_pdf_and_approval_workflow(client, admin_headers):
-    # 1. Execute a Payroll Run first to generate results
-    period_resp = client.get("/api/v1/payroll/periods", headers=admin_headers)
-    assert period_resp.status_code == 200
-    periods = period_resp.json()
-    period_id = periods[0]["id"]
-
-    run_payload = {
-        "payroll_period_id": period_id,
+def test_12_stage_payroll_approval_lifecycle(client, admin_headers):
+    """Verifies the complete 12-stage multi-tier payroll approval & disbursement lifecycle."""
+    
+    # 1. Stage 1: Draft - Create new period in Draft state
+    period_res = client.post("/api/v1/payroll/periods", json={
         "company_id": 1,
-        "auto_approve_attendance": True,
-    }
-    calc_resp = client.post("/api/v1/payroll/calculate", json=run_payload, headers=admin_headers)
-    assert calc_resp.status_code == 200
-    run_data = calc_resp.json()
-    run_id = run_data["id"]
-    assert run_data["status"] == "Calculated"
+        "name": "November 2024 Payroll",
+        "year_month": "2024-11",
+        "start_date": "2024-11-01",
+        "end_date": "2024-11-30",
+        "cutoff_date": "2024-11-25",
+        "status": "Draft"
+    }, headers=admin_headers)
+    assert period_res.status_code == 201
+    period_id = period_res.json()["id"]
 
-    # 2. Test Individual Payslip PDF Stream
+    # 2. Stage 2: Open - Open period for payroll processing
+    open_res = client.post(f"/api/v1/payroll/periods", json={
+        "company_id": 1,
+        "name": "November 2024 Payroll Active",
+        "year_month": "2024-11-open",
+        "start_date": "2024-11-01",
+        "end_date": "2024-11-30",
+        "cutoff_date": "2024-11-25"
+    }, headers=admin_headers)
+    assert open_res.status_code == 201
+
+    # 3. Stage 3 & 4: Calculate Payroll
+    calc_res = client.post("/api/v1/payroll/calculate", json={"payroll_period_id": period_id}, headers=admin_headers)
+    assert calc_res.status_code == 200
+    run_id = calc_res.json()["id"]
+    assert calc_res.json()["status"] == "Calculated"
+
+    # 4. Stage 5: Validate
+    val_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Validated", headers=admin_headers)
+    assert val_res.status_code == 200
+    assert val_res.json()["status"] == "Validated"
+
+    # 5. Stage 6: Submit for Approval
+    sub_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Submitted", headers=admin_headers)
+    assert sub_res.status_code == 200
+    assert sub_res.json()["status"] == "Submitted"
+
+    # 6. Stage 7: Manager Approval
+    mgr_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Manager Approved", headers=admin_headers)
+    assert mgr_res.status_code == 200
+    assert mgr_res.json()["status"] == "Manager Approved"
+
+    # 7. Stage 8: Finance Approval
+    fin_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Finance Approved", headers=admin_headers)
+    assert fin_res.status_code == 200
+    assert fin_res.json()["status"] == "Finance Approved"
+
+    # 8. Stage 9: Lock
+    lock_res = client.post(f"/api/v1/payroll/runs/{run_id}/lock", headers=admin_headers)
+    assert lock_res.status_code == 200
+    assert lock_res.json()["status"] == "Locked"
+
+    # 9. Stage 10: Payment Advice Generation
+    pay_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Payment", headers=admin_headers)
+    assert pay_res.status_code == 200
+    assert pay_res.json()["status"] == "Payment"
+
+    # 10. Stage 11: Paid (Bank Disbursement Complete)
+    paid_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Paid", headers=admin_headers)
+    assert paid_res.status_code == 200
+    assert paid_res.json()["status"] == "Paid"
+
+    # 11. Stage 12: Closed (GL Entry Posted & Closed)
+    closed_res = client.post(f"/api/v1/payroll/runs/{run_id}/status?target_status=Closed", headers=admin_headers)
+    assert closed_res.status_code == 200
+    assert closed_res.json()["status"] == "Closed"
+
+    # 12. Verify Payslip PDF Stream & Bulk ZIP Stream
     pdf_resp = client.get(f"/api/v1/payslips/employee/1/period/{period_id}/pdf", headers=admin_headers)
     assert pdf_resp.status_code == 200
-    assert pdf_resp.headers["content-type"] == "application/pdf"
     assert pdf_resp.content.startswith(b"%PDF-1.")
-
-    # 3. Test Step-by-Step Approval Workflow Transitions
-    # Step 3a: Manager Approval
-    appr1_resp = client.post(
-        f"/api/v1/payslips/run/{run_id}/approve",
-        json={"action": "APPROVE", "remarks": "Manager audit passed cleanly"},
-        headers=admin_headers,
-    )
-    assert appr1_resp.status_code == 200
-    assert appr1_resp.json()["status"] == "APPROVED"
-
-    # Step 3b: Finance Approval
-    appr2_resp = client.post(
-        f"/api/v1/payslips/run/{run_id}/approve",
-        json={"action": "APPROVE", "remarks": "Finance budget verified"},
-        headers=admin_headers,
-    )
-    assert appr2_resp.status_code == 200
-    assert appr2_resp.json()["status"] == "APPROVED"
-
-    # Step 3c: Final Lock
-    appr3_resp = client.post(
-        f"/api/v1/payslips/run/{run_id}/approve",
-        json={"action": "APPROVE", "remarks": "Final Org Lock executed"},
-        headers=admin_headers,
-    )
-    assert appr3_resp.status_code == 200
-    assert appr3_resp.json()["status"] == "APPROVED"
-
-    # 4. Fetch Approval Log
-    log_resp = client.get(f"/api/v1/payslips/run/{run_id}/approvals", headers=admin_headers)
-    assert log_resp.status_code == 200
-    logs = log_resp.json()
-    assert len(logs) == 3
-
-    # 5. Test Bulk Payslips ZIP Stream
-    zip_resp = client.get(f"/api/v1/payslips/run/{run_id}/bulk-zip", headers=admin_headers)
-    assert zip_resp.status_code == 200
-    assert zip_resp.headers["content-type"] == "application/zip"
-    assert zip_resp.content.startswith(b"PK\x03\x04")

@@ -16,6 +16,8 @@ from app.api.v1.reports import router as reports_router
 from app.api.v1.self_service import router as self_service_router
 from app.api.v1.audit import router as audit_router
 
+from app.api.v1.fnf import router as fnf_router
+
 api_router = APIRouter(prefix="/api/v1")
 
 api_router.include_router(auth_router)
@@ -34,6 +36,8 @@ api_router.include_router(bank_payment_router)
 api_router.include_router(reports_router)
 api_router.include_router(self_service_router)
 api_router.include_router(audit_router)
+api_router.include_router(fnf_router)
+
 
 
 

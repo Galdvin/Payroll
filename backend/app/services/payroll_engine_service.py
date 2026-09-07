@@ -102,11 +102,26 @@ class PayrollEngineService:
                 AttendanceSummary.year_month == period.year_month
             ).first()
 
-            total_days = 30
-            payable_days = float(att.payable_days) if att else 30.0
-            overtime_hrs = float(att.overtime_hours) if att else 0.0
+            total_days = (period.end_date - period.start_date).days + 1
+            if att:
+                payable_days = float(att.payable_days)
+                overtime_hrs = float(att.overtime_hours)
+            else:
+                payable_days = float(total_days)
+                overtime_hrs = 0.0
 
-            proration_factor = round(payable_days / float(total_days), 4)
+                # Check for new joiner proration (PAY-016)
+                if emp.date_of_joining and period.start_date <= emp.date_of_joining <= period.end_date:
+                    payable_days = float((period.end_date - emp.date_of_joining).days + 1)
+                # Check for resigned employee proration (PAY-017)
+                elif emp.resignation_date and period.start_date <= emp.resignation_date <= period.end_date:
+                    payable_days = float((emp.resignation_date - period.start_date).days + 1)
+                # Check for terminated / inactive employee (PAY-018)
+                elif emp.status in ("Terminated", "Resigned", "Inactive"):
+                    payable_days = 0.0
+
+            proration_factor = round(payable_days / float(total_days), 4) if total_days > 0 else 0.0
+
 
             prorated_basic = round(full_basic * proration_factor, 2)
             prorated_hra = round(full_hra * proration_factor, 2)
@@ -267,6 +282,30 @@ class PayrollEngineService:
         db.commit()
         db.refresh(run)
         return run
+
+    @staticmethod
+    def unlock_payroll_run(db: Session, run_id: int) -> PayrollRun:
+        run = PayrollEngineService.get_payroll_run(db, run_id)
+        run.status = "Calculated"
+        if run.payroll_period:
+            run.payroll_period.status = "Open"
+        db.commit()
+        db.refresh(run)
+        return run
+
+
+    @staticmethod
+    def update_run_status(db: Session, run_id: int, status_str: str) -> PayrollRun:
+        run = PayrollEngineService.get_payroll_run(db, run_id)
+        if run.status == "Locked" and status_str not in ("Locked", "Payment", "Paid", "Closed"):
+            raise PayrollException("Locked payroll runs cannot revert status.", error_code="PAYROLL_ALREADY_LOCKED")
+        run.status = status_str
+        if status_str in ("Locked", "Closed"):
+            run.payroll_period.status = status_str
+        db.commit()
+        db.refresh(run)
+        return run
+
 
     @staticmethod
     def get_employee_calculation_trace(db: Session, run_id: int, employee_id: int) -> Dict[str, Any]:

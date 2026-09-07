@@ -19,9 +19,13 @@ def get_employee_payslip_pdf(
     employee_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Generates and streams individual PDF payslip for an employee."""
+    if current_user.employee_id and current_user.employee_id != employee_id:
+        if current_user.role and current_user.role.name not in ("Admin", "Payroll Admin", "HR Manager"):
+            raise PayrollException("ACCESS_DENIED", "You are not authorized to view another employee's payslip")
+
     payroll_emp = (
         db.query(PayrollEmployee)
         .join(PayrollRun)
@@ -41,6 +45,65 @@ def get_employee_payslip_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f"inline; filename={filename}"},
     )
+
+
+@router.get("/employee/{employee_id}/period/{period_id}", status_code=status.HTTP_200_OK)
+def get_employee_payslip_json(
+    employee_id: int,
+    period_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Fetches itemized JSON payslip summary including earnings, deductions, tax, and employer contribution."""
+    if current_user.employee_id and current_user.employee_id != employee_id:
+        if current_user.role and current_user.role.name not in ("Admin", "Payroll Admin", "HR Manager"):
+            raise PayrollException("ACCESS_DENIED", "You are not authorized to view another employee's payslip")
+
+    payroll_emp = (
+        db.query(PayrollEmployee)
+        .join(PayrollRun)
+        .filter(
+            PayrollEmployee.employee_id == employee_id,
+            PayrollRun.payroll_period_id == period_id,
+        )
+        .first()
+    )
+    if not payroll_emp:
+        raise PayrollException("PAYSLIP_NOT_FOUND", "Payslip record not found for this employee and period")
+
+    return {
+        "id": payroll_emp.id,
+        "employee_id": payroll_emp.employee_id,
+        "period_id": period_id,
+        "total_days": payroll_emp.total_days,
+        "payable_days": payroll_emp.payable_days,
+        "gross_salary": payroll_emp.gross_salary,
+        "taxable_income": payroll_emp.taxable_income,
+        "employee_statutory": payroll_emp.employee_statutory,
+        "employer_statutory": payroll_emp.employer_statutory,
+        "total_deductions": payroll_emp.total_deductions,
+        "net_salary": payroll_emp.net_salary,
+        "employer_cost": payroll_emp.employer_cost,
+        "earnings": [
+            {
+                "code": e.component_code,
+                "name": e.name,
+                "full_amount": float(e.full_amount),
+                "prorated_amount": float(e.prorated_amount),
+            }
+            for e in payroll_emp.earnings
+        ],
+        "deductions": [
+            {
+                "code": d.component_code,
+                "name": d.name,
+                "amount": float(d.amount),
+            }
+            for e in payroll_emp.deductions
+        ],
+        "calculation_trace": payroll_emp.calculation_trace,
+    }
+
 
 
 @router.get("/run/{run_id}/bulk-zip", status_code=status.HTTP_200_OK)

@@ -87,3 +87,35 @@ class HolidayResponse(HolidayCreate):
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class CarryForwardRequest(BaseModel):
+    employee_id: int
+    from_year: int
+    to_year: int
+    max_carry_forward: float = 5.0
+
+
+class CarryForwardResponse(BaseModel):
+    employee_id: int
+    from_year: int
+    to_year: int
+    carried_forward_days: float
+    new_total_balance: float
+
+
+class LeaveEncashmentRequest(BaseModel):
+    employee_id: int
+    leave_type_id: int
+    days: float
+    year: int = 2024
+    daily_rate: float = 1000.0
+
+
+class LeaveEncashmentResponse(BaseModel):
+    employee_id: int
+    leave_type_id: int
+    days_encashed: float
+    encashment_amount: float
+    remaining_balance: float
+

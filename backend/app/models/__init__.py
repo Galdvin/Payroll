@@ -46,6 +46,7 @@ from app.models.financial_extras import (
     ReimbursementItem,
 )
 from app.models.bank_payment import BankPaymentBatch, JournalEntry
+from app.models.fnf import FnfSettlement
 
 __all__ = [
     "Base",
@@ -97,6 +98,8 @@ __all__ = [
     "ReimbursementItem",
     "BankPaymentBatch",
     "JournalEntry",
+    "FnfSettlement",
 ]
+
 
 

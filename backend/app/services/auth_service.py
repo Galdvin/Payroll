@@ -185,3 +185,25 @@ class AuthService:
             roles=role_names,
             permissions=list(permissions_set),
         )
+
+    @staticmethod
+    def logout(db: Session, refresh_token_str: Optional[str] = None) -> Dict[str, Any]:
+        """Revoke refresh token and invalidate user session."""
+        if refresh_token_str:
+            token_record = db.query(RefreshToken).filter(RefreshToken.token == refresh_token_str).first()
+            if token_record:
+                token_record.is_revoked = True
+                db.commit()
+        return {"success": True, "message": "User session invalidated successfully."}
+
+    @staticmethod
+    def reset_password(db: Session, email: str, new_password: str) -> Dict[str, Any]:
+        """Reset user password."""
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise InvalidCredentialsException("User with specified email not found.")
+        
+        user.hashed_password = get_password_hash(new_password)
+        db.commit()
+        return {"success": True, "message": "Password reset successfully."}
+

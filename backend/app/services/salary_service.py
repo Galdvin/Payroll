@@ -78,6 +78,11 @@ class SalaryService:
 
     @staticmethod
     def create_structure(db: Session, data: SalaryStructureCreate) -> SalaryStructure:
+        # Check for duplicate component IDs in request
+        comp_ids = [item.component_id for item in data.components]
+        if len(comp_ids) != len(set(comp_ids)):
+            raise PayrollException("Duplicate component detected in salary structure.", error_code="DUPLICATE_COMPONENT")
+
         struct = SalaryStructure(
             company_id=data.company_id,
             name=data.name,
@@ -102,9 +107,13 @@ class SalaryService:
     # --- Engine CTC Breakdown & Assignment ---
     @staticmethod
     def assign_employee_salary(db: Session, data: EmployeeSalaryAssign) -> EmployeeSalary:
+        if data.total_ctc < 0:
+            raise PayrollException("Total CTC cannot be negative.", error_code="NEGATIVE_SALARY")
+
         emp = db.query(Employee).filter(Employee.id == data.employee_id).first()
         if not emp:
             raise ResourceNotFoundException("Employee", data.employee_id)
+
 
         SalaryService.seed_salary_components(db)
         comp_map = {c.code: c for c in db.query(SalaryComponent).all()}

@@ -10,6 +10,9 @@ from app.schemas.attendance import (
     CheckOutRequest,
     AttendanceResponse,
     AttendanceSummaryResponse,
+    MarkAttendanceRequest,
+    BulkImportRequest,
+    AttendanceCorrectionRequest,
 )
 from app.services.attendance_service import AttendanceService
 from app.security.permissions import RequirePermission, get_current_user
@@ -28,14 +31,54 @@ def create_shift(body: ShiftCreate, db: Session = Depends(get_db), _: User = Dep
     return AttendanceService.create_shift(db, body)
 
 
+@router.post("/record", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
+def mark_attendance(
+    body: MarkAttendanceRequest,
+    prevent_duplicate: bool = Query(False),
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return AttendanceService.mark_attendance(db, body, prevent_duplicate=prevent_duplicate)
+
+
 @router.post("/check-in", response_model=AttendanceResponse, status_code=status.HTTP_200_OK)
-def check_in(body: CheckInRequest, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    return AttendanceService.check_in(db, body)
+def check_in(
+    body: CheckInRequest,
+    prevent_duplicate: bool = Query(False),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    return AttendanceService.check_in(db, body, prevent_duplicate=prevent_duplicate)
 
 
 @router.post("/check-out", response_model=AttendanceResponse, status_code=status.HTTP_200_OK)
 def check_out(body: CheckOutRequest, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     return AttendanceService.check_out(db, body)
+
+
+@router.post("/bulk-import", response_model=List[AttendanceResponse], status_code=status.HTTP_200_OK)
+def bulk_import(
+    body: BulkImportRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return AttendanceService.bulk_import(db, body.records)
+
+
+@router.put("/{attendance_id}/correct", response_model=AttendanceResponse, status_code=status.HTTP_200_OK)
+def correct_attendance(
+    attendance_id: int,
+    body: AttendanceCorrectionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RequirePermission("attendance.manage")),
+):
+    return AttendanceService.correct_attendance(
+        db,
+        attendance_id=attendance_id,
+        req=body,
+        user_id=current_user.id,
+        user_email=current_user.email,
+    )
 
 
 @router.get("", response_model=List[AttendanceResponse], status_code=status.HTTP_200_OK)
@@ -58,3 +101,4 @@ def get_attendance_summary(
 ):
     """Aggregate monthly attendance data as payable days input for the payroll calculation engine."""
     return AttendanceService.generate_attendance_summary(db, employee_id=employee_id, year_month=year_month)
+
