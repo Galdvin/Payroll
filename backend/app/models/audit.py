@@ -18,3 +18,6 @@ class AuditLog(Base):
     new_values: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    prev_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    hash_checksum: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+

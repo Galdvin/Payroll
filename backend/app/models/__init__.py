@@ -31,6 +31,7 @@ from app.models.payroll_run import (
     PayrollEarning,
     PayrollDeduction,
 )
+from app.models.payroll_approval import PayrollApproval
 from app.models.statutory import (
     StatutoryRule,
     TaxRule,
@@ -44,6 +45,7 @@ from app.models.financial_extras import (
     Reimbursement,
     ReimbursementItem,
 )
+from app.models.bank_payment import BankPaymentBatch, JournalEntry
 
 __all__ = [
     "Base",
@@ -83,6 +85,7 @@ __all__ = [
     "PayrollEmployee",
     "PayrollEarning",
     "PayrollDeduction",
+    "PayrollApproval",
     "StatutoryRule",
     "TaxRule",
     "TaxSlab",
@@ -92,4 +95,8 @@ __all__ = [
     "BonusIncentive",
     "Reimbursement",
     "ReimbursementItem",
+    "BankPaymentBatch",
+    "JournalEntry",
 ]
+
+

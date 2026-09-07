@@ -16,6 +16,11 @@ import { LeavesPage } from './pages/LeavesPage';
 import { SalaryStructuresPage } from './pages/SalaryStructuresPage';
 import { PayrollEnginePage } from './pages/PayrollEnginePage';
 import { TaxStatutoryPage } from './pages/TaxStatutoryPage';
+import { FinancialExtrasPage } from './pages/FinancialExtrasPage';
+import { PayslipsPage } from './pages/PayslipsPage';
+import { BankPaymentsPage } from './pages/BankPaymentsPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { SelfServicePage } from './pages/SelfServicePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -55,6 +60,11 @@ export const App: React.FC = () => {
               <Route path="/salary-structures" element={<SalaryStructuresPage />} />
               <Route path="/payroll" element={<PayrollEnginePage />} />
               <Route path="/tax-statutory" element={<TaxStatutoryPage />} />
+              <Route path="/financial-extras" element={<FinancialExtrasPage />} />
+              <Route path="/payslips" element={<PayslipsPage />} />
+              <Route path="/payments" element={<BankPaymentsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/self-service" element={<SelfServicePage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
@@ -63,5 +73,10 @@ export const App: React.FC = () => {
     </QueryClientProvider>
   );
 };
+
+
+
+
+
 
 export default App;
