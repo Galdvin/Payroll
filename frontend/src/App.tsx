@@ -8,6 +8,9 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UsersPage } from './pages/UsersPage';
 import { RolesPage } from './pages/RolesPage';
+import { OrganizationPage } from './pages/OrganizationPage';
+import { EmployeesPage } from './pages/EmployeesPage';
+import { EmployeeDetailPage } from './pages/EmployeeDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -39,6 +42,9 @@ export const App: React.FC = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/roles" element={<RolesPage />} />
+              <Route path="/organization" element={<OrganizationPage />} />
+              <Route path="/employees" element={<EmployeesPage />} />
+              <Route path="/employees/:id" element={<EmployeeDetailPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
