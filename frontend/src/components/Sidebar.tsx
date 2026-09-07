@@ -9,7 +9,8 @@ import {
   Calculator, 
   FileText, 
   CreditCard, 
-  BarChart3
+  BarChart3,
+  Palmtree
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
@@ -21,7 +22,8 @@ export const Sidebar: React.FC = () => {
     { label: 'Staff Directory', path: '/employees', icon: Users, perm: 'employee.view' },
     { label: 'Organization', path: '/organization', icon: Building2, perm: 'employee.view' },
     { label: 'Roles & RBAC', path: '/roles', icon: ShieldCheck, perm: 'employee.view' },
-    { label: 'Attendance & Leave', path: '/attendance', icon: CalendarCheck, perm: 'attendance.view', disabled: true },
+    { label: 'Attendance & Shifts', path: '/attendance', icon: CalendarCheck, perm: 'attendance.view' },
+    { label: 'Leave Portal', path: '/leaves', icon: Palmtree, perm: 'attendance.view' },
     { label: 'Payroll Engine', path: '/payroll', icon: Calculator, perm: 'payroll.view', disabled: true },
     { label: 'Payslips & PDF', path: '/payslips', icon: FileText, perm: 'payroll.view', disabled: true },
     { label: 'Bank Payments', path: '/payments', icon: CreditCard, perm: 'payroll.process_payment', disabled: true },
@@ -58,7 +60,7 @@ export const Sidebar: React.FC = () => {
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-400">Phase 3+</span>
+                  <span className="text-[10px] font-mono bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-400">Phase 4+</span>
                 </div>
               );
             }
@@ -91,7 +93,7 @@ export const Sidebar: React.FC = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1"></span> Active
           </span>
         </div>
-        <div className="text-[11px] font-mono text-slate-500 truncate">Phase 2: Org & Employee</div>
+        <div className="text-[11px] font-mono text-slate-500 truncate">Phase 3: Attendance & Leaves</div>
       </div>
     </aside>
   );

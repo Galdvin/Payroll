@@ -11,6 +11,8 @@ import { RolesPage } from './pages/RolesPage';
 import { OrganizationPage } from './pages/OrganizationPage';
 import { EmployeesPage } from './pages/EmployeesPage';
 import { EmployeeDetailPage } from './pages/EmployeeDetailPage';
+import { AttendancePage } from './pages/AttendancePage';
+import { LeavesPage } from './pages/LeavesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -45,6 +47,8 @@ export const App: React.FC = () => {
               <Route path="/organization" element={<OrganizationPage />} />
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/employees/:id" element={<EmployeeDetailPage />} />
+              <Route path="/attendance" element={<AttendancePage />} />
+              <Route path="/leaves" element={<LeavesPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>

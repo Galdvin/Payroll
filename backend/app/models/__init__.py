@@ -12,6 +12,18 @@ from app.models.organization import (
 )
 from app.models.employee import Employee, EmployeeHistory
 from app.models.document import EmployeeDocument
+from app.models.shift import Shift, ShiftAssignment
+from app.models.attendance import Attendance, AttendanceSummary
+from app.models.leave import LeaveType, LeavePolicy, LeaveBalance, LeaveRequest
+from app.models.holiday import Holiday
+from app.models.salary import (
+    SalaryComponent,
+    SalaryStructure,
+    StructureComponent,
+    EmployeeSalary,
+    EmployeeSalaryComponent,
+    SalaryRevision,
+)
 
 __all__ = [
     "Base",
@@ -31,4 +43,19 @@ __all__ = [
     "Employee",
     "EmployeeHistory",
     "EmployeeDocument",
+    "Shift",
+    "ShiftAssignment",
+    "Attendance",
+    "AttendanceSummary",
+    "LeaveType",
+    "LeavePolicy",
+    "LeaveBalance",
+    "LeaveRequest",
+    "Holiday",
+    "SalaryComponent",
+    "SalaryStructure",
+    "StructureComponent",
+    "EmployeeSalary",
+    "EmployeeSalaryComponent",
+    "SalaryRevision",
 ]
