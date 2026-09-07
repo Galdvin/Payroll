@@ -136,21 +136,43 @@ export const PayrollEnginePage: React.FC = () => {
           </select>
         </div>
 
-        <button
-          onClick={() => selectedPeriodId && runCalculation(selectedPeriodId)}
-          disabled={isCalculating || activeRun?.status === 'Locked'}
-          className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-lg shadow-brand-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 transition"
-        >
-          {isCalculating ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              <span>Execute Calculation Pipeline</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={async () => {
+              setIsCalculating(true);
+              try {
+                const res = await payrollService.runBenchmark(10000);
+                alert(`✓ 10,000 Employee Benchmark Complete!\n• Duration: ${res.duration_seconds}s\n• Throughput: ${res.throughput_per_sec} calculations/sec\n• Total Gross: ₹${res.total_gross_disbursed.toLocaleString()}`);
+              } catch (err) {
+                alert('Benchmark failed');
+              } finally {
+                setIsCalculating(false);
+              }
+            }}
+            disabled={isCalculating}
+            className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 transition"
+          >
+            <Users className="w-4 h-4" />
+            <span>Benchmark 10,000 Staff</span>
+          </button>
+
+          <button
+            onClick={() => selectedPeriodId && runCalculation(selectedPeriodId)}
+            disabled={isCalculating || activeRun?.status === 'Locked'}
+            className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-lg shadow-brand-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 transition"
+          >
+            {isCalculating ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                <span>Execute Calculation Pipeline</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
 
       {/* Lifecycle Stepper Progress Bar */}
       {activeRun && (

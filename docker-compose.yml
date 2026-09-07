@@ -7,26 +7,14 @@ services:
     restart: always
     environment:
       POSTGRES_USER: payroll_user
-      POSTGRES_PASSWORD: payroll_password
-      POSTGRES_DB: payroll_db
+      POSTGRES_PASSWORD: PayrollSecurePassword123!
+      POSTGRES_DB: enterprise_payroll
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U payroll_user -d payroll_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: payroll_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "pg_isready -U payroll_user -d enterprise_payroll"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -37,21 +25,15 @@ services:
       dockerfile: Dockerfile
     container_name: payroll_backend
     restart: always
+    environment:
+      DATABASE_URL: postgresql://payroll_user:PayrollSecurePassword123!@postgres:5432/enterprise_payroll
+      JWT_SECRET: SuperSecretPayrollEnterpriseJWTKey2026!
+      CORS_ORIGINS: "http://localhost,http://localhost:80,http://localhost:3000"
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://payroll_user:payroll_password@postgres:5432/payroll_db
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - SECRET_KEY=super-secret-enterprise-payroll-jwt-key-change-in-production
-      - ENVIRONMENT=development
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
 
   frontend:
     build:
@@ -60,9 +42,7 @@ services:
     container_name: payroll_frontend
     restart: always
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+      - "80:80"
     depends_on:
       - backend
 

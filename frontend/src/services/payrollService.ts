@@ -31,4 +31,10 @@ export const payrollService = {
     const res = await api.post<PayrollRun>(`/payroll/runs/${runId}/lock`);
     return res.data;
   },
+
+  runBenchmark: async (count: number = 10000): Promise<Record<string, any>> => {
+    const res = await api.get<Record<string, any>>(`/payroll/benchmark?count=${count}`);
+    return res.data;
+  },
 };
+

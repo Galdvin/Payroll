@@ -32,6 +32,7 @@ export const Sidebar: React.FC = () => {
     { label: 'Bank Payments', path: '/payments', icon: CreditCard, perm: 'payroll.process_payment' },
     { label: 'Reports & Analytics', path: '/reports', icon: BarChart3, perm: 'reports.view' },
     { label: 'Self-Service (ESS/MSS)', path: '/self-service', icon: Users, perm: null },
+    { label: 'Audit Trail', path: '/audit', icon: ShieldCheck, perm: 'employee.view' },
   ];
 
   return (
@@ -64,7 +65,7 @@ export const Sidebar: React.FC = () => {
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-400">Phase 11+</span>
+                  <span className="text-[10px] font-mono bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-400">Phase 12+</span>
                 </div>
               );
             }
@@ -97,8 +98,9 @@ export const Sidebar: React.FC = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1"></span> Active
           </span>
         </div>
-        <div className="text-[11px] font-mono text-slate-500 truncate">Phase 11: ESS & MSS Portals</div>
+        <div className="text-[11px] font-mono text-slate-500 truncate">Phase 12: Security & Audit Trail</div>
       </div>
+
 
 
 

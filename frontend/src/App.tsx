@@ -21,6 +21,7 @@ import { PayslipsPage } from './pages/PayslipsPage';
 import { BankPaymentsPage } from './pages/BankPaymentsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SelfServicePage } from './pages/SelfServicePage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -65,6 +66,7 @@ export const App: React.FC = () => {
               <Route path="/payments" element={<BankPaymentsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/self-service" element={<SelfServicePage />} />
+              <Route path="/audit" element={<AuditLogsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
@@ -73,6 +75,7 @@ export const App: React.FC = () => {
     </QueryClientProvider>
   );
 };
+
 
 
 

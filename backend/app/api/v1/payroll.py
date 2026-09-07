@@ -10,10 +10,21 @@ from app.schemas.payroll import (
     PayrollEmployeeResponse,
 )
 from app.services.payroll_engine_service import PayrollEngineService
+from app.services.payroll_benchmark_service import PayrollBenchmarkService
 from app.security.permissions import RequirePermission, get_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/payroll", tags=["Payroll Engine & Periods"])
+
+
+@router.get("/benchmark", status_code=status.HTTP_200_OK)
+def run_payroll_benchmark(
+    count: int = 10000,
+    _: User = Depends(RequirePermission("payroll.calculate")),
+):
+    """Executes high-volume performance benchmarking for up to 10,000 employees."""
+    return PayrollBenchmarkService.run_high_volume_benchmark(count=count)
+
 
 
 @router.get("/periods", response_model=List[PayrollPeriodResponse], status_code=status.HTTP_200_OK)
