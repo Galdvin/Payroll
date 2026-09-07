@@ -1,59 +1,53 @@
-# Database Architecture & Schema
+# Database Schema Reference - Enterprise Payroll Management System
 
-## 1. Schema Overview
+## Overview
+The database schema consists of 25+ normalized tables managed via SQLAlchemy 2.0 and Alembic migrations.
 
-The database is built on PostgreSQL 16 utilizing normalized schemas with strict foreign keys, indexes, and audit timestamps (`created_at`, `updated_at`).
+---
 
-## 2. Core Tables (Phase 1: Foundation & RBAC)
+## Core Entities & Relationships
 
-### `users`
-- `id` (UUID / Integer Primary Key)
-- `email` (VARCHAR 255, Unique, Indexed)
-- `hashed_password` (VARCHAR 255)
-- `full_name` (VARCHAR 255)
-- `is_active` (BOOLEAN, Default True)
-- `is_superuser` (BOOLEAN, Default False)
-- `organization_id` (UUID / Integer, Nullable for SuperAdmin)
-- `company_id` (UUID / Integer, Nullable)
-- `created_at` (TIMESTAMP WITH TIMEZONE)
-- `updated_at` (TIMESTAMP WITH TIMEZONE)
+### 1. Multi-Tenant Organization Master
+- `organizations`: Root enterprise entity.
+- `companies`: Multi-tenant companies linked to an organization.
+- `branches`: Physical locations/branches.
+- `departments`: Hierarchical department structure.
+- `designations`: Corporate job titles.
 
-### `roles`
-- `id` (Integer Primary Key)
-- `name` (VARCHAR 100, Unique) — e.g. "Super Admin", "HR Manager", "Payroll Manager", "Employee"
-- `description` (TEXT)
-- `is_system_role` (BOOLEAN, Default False)
+### 2. Employee Master & History
+- `employees`: Core employee master record (PAN, Bank A/C, PF UAN, ESI, Joining Date).
+- `employee_history`: Audit trail for salary revisions, department transfers, and designation changes.
 
-### `permissions`
-- `id` (Integer Primary Key)
-- `code` (VARCHAR 100, Unique) — e.g. `employee.view`, `payroll.calculate`, `salary.view`
-- `module` (VARCHAR 50) — e.g. `employee`, `payroll`, `reports`
-- `description` (TEXT)
+### 3. Attendance, Shifts & Leaves
+- `shifts`: Work shifts with flexible/fixed hours.
+- `attendance`: Daily punch-in/out records with calculated overtime hours.
+- `leave_types`, `leave_policies`, `leave_balances`, `leave_requests`: Complete leave quota & approval engine.
 
-### `user_roles`
-- `user_id` (FK -> users.id)
-- `role_id` (FK -> roles.id)
+### 4. Configurable Salary Structure Engine
+- `salary_components`: Component catalog (`BASIC`, `HRA`, `TRANSPORT`, `SPECIAL_ALLOWANCE`, `IN_PF`, `IN_ESI`, `IN_TDS`, `IN_PT`).
+- `salary_structures`: Base structure blueprints.
+- `employee_salaries`: Employee assigned CTC breakdowns.
 
-### `role_permissions`
-- `role_id` (FK -> roles.id)
-- `permission_id` (FK -> permissions.id)
+### 5. Core Payroll Batch Execution & Calculation Trace
+- `payroll_periods`: Pay period definition (e.g. `2024-09`).
+- `payroll_runs`: Batch run status (`Draft` -> `Calculated` -> `Manager Approved` -> `Finance Approved` -> `Locked`).
+- `payroll_employees`: Calculated payroll line per employee containing **`calculation_trace` JSONB tree**.
+- `payroll_earnings`: Itemized earning components per employee.
+- `payroll_deductions`: Itemized deduction components per employee.
 
-### `refresh_tokens`
-- `id` (UUID Primary Key)
-- `user_id` (FK -> users.id)
-- `token_hash` (VARCHAR 255, Indexed)
-- `expires_at` (TIMESTAMP WITH TIMEZONE)
-- `is_revoked` (BOOLEAN, Default False)
-- `device_info` (VARCHAR 255)
+### 6. Statutory & Tax Rules
+- `statutory_rules`: Country-specific rules (India PF 12%/₹1,800 cap, ESI 0.75%/3.25%, PT, UAE Pension).
+- `tax_rules` & `tax_slabs`: Versioned progressive income tax slabs (India FY 2024-2025 New Regime).
 
-### `audit_logs`
-- `id` (BigInteger Primary Key)
-- `user_id` (FK -> users.id, Nullable)
-- `action` (VARCHAR 100) — e.g. "USER_LOGIN", "PAYROLL_CALCULATED"
-- `module` (VARCHAR 50)
-- `record_id` (VARCHAR 100)
-- `old_values` (JSONB)
-- `new_values` (JSONB)
-- `ip_address` (VARCHAR 45)
-- `user_agent` (TEXT)
-- `timestamp` (TIMESTAMP WITH TIMEZONE)
+### 7. Financial Extras & Variable Pay
+- `loans` & `loan_transactions`: Loan principal, interest rate, tenure, and reducing-balance EMI amortization.
+- `advances`: Emergency salary advances with recovery period tracking.
+- `bonuses`: Festive, performance, retention, and commission variable bonuses.
+- `reimbursements` & `reimbursement_items`: Multi-item expense claims with manager approval.
+
+### 8. Bank Payments & Accounting Journal Entries
+- `bank_payment_batches`: Batch disbursement files (HDFC CMS, ICICI CIB, SBI CMP, ISO20022) with SHA-256 checksums.
+- `journal_entries`: Double-entry General Ledger records (\(\sum Debit = \sum Credit\)).
+
+### 9. Cryptographic Audit Log
+- `audit_logs`: Immutable action audit log with SHA-256 hash chaining (`prev_hash` & `hash_checksum`).

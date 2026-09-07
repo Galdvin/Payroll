@@ -1,56 +1,56 @@
-# Architecture Overview — Enterprise Payroll Management System
+# System Architecture - Enterprise Payroll Management System
 
-## 1. System Overview
+## Overview
+The Enterprise Payroll Management System is a multi-tenant, high-performance payroll calculation engine, compliance automation platform, and financial self-service suite.
 
-The Enterprise Payroll Management System is designed as a modular, extensible, multi-tenant application capable of processing payroll across multiple organizational units, branches, and multi-country tax/statutory rule frameworks.
+---
 
-## 2. Technical Stack
+## Architectural Principles
+1. **Multi-Tenant Isolation**: Complete logical data isolation across companies and organizations.
+2. **Deterministic Calculation Engine**: Stateless, reproducible salary calculations with step-by-step mathematical trace trees.
+3. **Decoupled Statutory Rules**: Versioned tax slabs and statutory rules (India PF/ESI/PT/TDS & UAE Pension) stored in DB rules tables rather than hardcoded logic.
+4. **Cryptographic Integrity**: SHA-256 hash chaining (\(Hash_n = SHA256(Hash_{n-1} + Payload)\)) ensuring tamper-evident audit logs.
+5. **Double-Entry General Ledger Accounting**: Automatic generation of balanced debit and credit entries (\(\sum Debit = \sum Credit\)) mapping to ERP systems (SAP, Tally, QuickBooks).
 
-- **Backend**: FastAPI (Python 3.11+), SQLAlchemy 2.0 ORM, Pydantic v2, PostgreSQL 16, Redis 7, Celery.
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, React Query, Zustand.
-- **Authentication & Security**: OAuth2 JWT + Refresh Tokens, Argon2/BCrypt password hashing, Granular RBAC, Audit Logging.
-- **Testing**: Pytest (Backend API & Calculation Engine), Playwright/Vitest (Frontend & E2E).
+---
 
-## 3. Modular Clean Architecture
-
+## High-Level Architecture Diagram
 ```
-                               ┌─────────────────────────┐
-                               │  Vite React Frontend    │
-                               └────────────┬────────────┘
-                                            │ HTTP / JSON JWT
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                            FastAPI Application Gateway                         │
-│  ┌───────────────────────────────┐     ┌────────────────────────────────────┐  │
-│  │   CORS / Rate Limit / Auth    │     │   Granular RBAC Permission Layer   │  │
-│  └──────────────┬────────────────┘     └─────────────────┬──────────────────┘  │
-└─────────────────┼────────────────────────────────────────┼─────────────────────┘
-                  │                                        │
-                  ▼                                        ▼
-┌───────────────────────────────────┐     ┌──────────────────────────────────────┐
-│        API Controllers            │ ──► │          Service Domain Layer        │
-│  - Auth / Users / Roles           │     │  - AuthService                       │
-│  - Employees / Organizations      │     │  - EmployeeService                   │
-│  - Attendance / Leave             │     │  - PayrollEngineService              │
-│  - Payroll Engine                 │     │  - StatutoryRuleEngine (India / GCC) │
-└───────────────────────────────────┘     └──────────────────┬───────────────────┘
-                                                             │
-                                                             ▼
-                                          ┌──────────────────────────────────────┐
-                                          │      Data Repository & DB Layer      │
-                                          │  - SQLAlchemy 2.0 Models             │
-                                          │  - Alembic Database Migrations       │
-                                          └──────────────────┬───────────────────┘
-                                                             │
-                                                             ▼
-                                          ┌──────────────────────────────────────┐
-                                          │    PostgreSQL Database (Multi-Tenant)│
-                                          └──────────────────────────────────────┘
+                     +---------------------------------------+
+                     |           React SPA Frontend          |
+                     |  TypeScript + Vite + Glassmorphic UI  |
+                     +-------------------+-------------------+
+                                         |
+                                  REST API (JSON)
+                                         |
+                     +-------------------v-------------------+
+                     |            FastAPI Backend            |
+                     |    OAuth2 JWT + RBAC Security Guard   |
+                     +-------------------+-------------------+
+                                         |
+         +-------------------------------+-------------------------------+
+         |                               |                               |
++--------v-------+               +-------v--------+              +-------v--------+
+| Payroll Engine |               | Tax/Statutory  |              | ReportLab PDF  |
+| Calculation    |               | Rules Catalog  |              | Generator      |
++--------+-------+               +-------+--------+              +-------+--------+
+         |                               |                               |
+         +-------------------------------+-------------------------------+
+                                         |
+                                 SQLAlchemy 2.0 ORM
+                                         |
+                     +-------------------v-------------------+
+                     |         PostgreSQL 16 Database        |
+                     +---------------------------------------+
 ```
 
-## 4. Key Architectural Patterns
+---
 
-1. **Rule Engine Isolation**: Tax and statutory calculations are decoupled into dynamic, versioned rule engines rather than hard-coded into business logic.
-2. **Auditability & Traceability**: Every payroll calculation stores detailed calculation traces explaining Gross, Tax, Deductions, and Net Salary steps.
-3. **Multi-Tenancy**: All domain tables enforce `organization_id` and `company_id` soft/hard boundaries.
-4. **Idempotency & Concurrency Locking**: Finalized payroll runs enter an immutable `LOCKED` status preventing duplicate processing.
+## Role-Based Access Control (RBAC) Matrix
+
+| Role | Permissions | Scope |
+| :--- | :--- | :--- |
+| **Super Admin** | `*` (Full System Access) | Cross-Tenant / Organization |
+| **Payroll Manager** | `payroll.*`, `salary.*`, `reports.*`, `payments.*` | Company Level |
+| **Finance Manager** | `payroll.approve`, `payments.*`, `reports.view` | Finance Review |
+| **Employee** | `ess.view`, `payslip.download`, `leave.apply` | Self Service Only |
