@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.rbac import RoleCreate, RoleResponse, PermissionResponse
+from app.schemas.rbac import RoleCreate, RoleUpdate, RoleResponse, PermissionResponse
 from app.services.rbac_service import RBACService
 from app.security.permissions import RequirePermission, get_current_user
 from app.models.user import User
@@ -29,6 +29,27 @@ def create_role(
     return RBACService.create_role(db, body)
 
 
+@router.put("/{role_id}", response_model=RoleResponse, status_code=status.HTTP_200_OK)
+def update_role(
+    role_id: int,
+    body: RoleUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("employee.create")),
+):
+    """Update role details and permissions."""
+    return RBACService.update_role(db, role_id, body)
+
+
+@router.delete("/{role_id}", status_code=status.HTTP_200_OK)
+def delete_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("employee.create")),
+):
+    """Delete a custom role."""
+    return RBACService.delete_role(db, role_id)
+
+
 @router.get("/permissions", response_model=List[PermissionResponse], status_code=status.HTTP_200_OK)
 def list_permissions(
     db: Session = Depends(get_db),
@@ -36,3 +57,4 @@ def list_permissions(
 ):
     """List all available granular system permissions."""
     return RBACService.get_all_permissions(db)
+

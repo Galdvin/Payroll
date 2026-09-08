@@ -101,3 +101,73 @@ class OrganizationService:
         db.commit()
         db.refresh(cc)
         return cc
+
+    # --- Update & Delete Helpers ---
+    @staticmethod
+    def update_department(db: Session, dept_id: int, name: str, code: str) -> Department:
+        dept = db.query(Department).filter(Department.id == dept_id).first()
+        if not dept:
+            raise ResourceNotFoundException("Department", dept_id)
+        dept.name = name
+        if code:
+            dept.code = code
+        db.commit()
+        db.refresh(dept)
+        return dept
+
+    @staticmethod
+    def delete_department(db: Session, dept_id: int) -> dict:
+        dept = db.query(Department).filter(Department.id == dept_id).first()
+        if not dept:
+            raise ResourceNotFoundException("Department", dept_id)
+        db.delete(dept)
+        db.commit()
+        return {"success": True, "message": f"Department {dept_id} deleted successfully."}
+
+    @staticmethod
+    def update_designation(db: Session, desig_id: int, title: str, code: str) -> Designation:
+        desig = db.query(Designation).filter(Designation.id == desig_id).first()
+        if not desig:
+            raise ResourceNotFoundException("Designation", desig_id)
+        desig.title = title
+        if code:
+            desig.code = code
+        db.commit()
+        db.refresh(desig)
+        return desig
+
+    @staticmethod
+    def delete_designation(db: Session, desig_id: int) -> dict:
+        desig = db.query(Designation).filter(Designation.id == desig_id).first()
+        if not desig:
+            raise ResourceNotFoundException("Designation", desig_id)
+        db.delete(desig)
+        db.commit()
+        return {"success": True, "message": f"Designation {desig_id} deleted successfully."}
+
+    @staticmethod
+    def delete_branch(db: Session, branch_id: int) -> dict:
+        branch = db.query(Branch).filter(Branch.id == branch_id).first()
+        if not branch:
+            raise ResourceNotFoundException("Branch", branch_id)
+        db.delete(branch)
+        db.commit()
+        return {"success": True, "message": f"Branch {branch_id} deleted successfully."}
+
+    @staticmethod
+    def delete_company(db: Session, company_id: int) -> dict:
+        company = db.query(Company).filter(Company.id == company_id).first()
+        if not company:
+            raise ResourceNotFoundException("Company", company_id)
+        db.delete(company)
+        db.commit()
+        return {"success": True, "message": f"Company {company_id} deleted successfully."}
+
+    @staticmethod
+    def delete_cost_center(db: Session, cc_id: int) -> dict:
+        cc = db.query(CostCenter).filter(CostCenter.id == cc_id).first()
+        if not cc:
+            raise ResourceNotFoundException("CostCenter", cc_id)
+        db.delete(cc)
+        db.commit()
+        return {"success": True, "message": f"CostCenter {cc_id} deleted successfully."}

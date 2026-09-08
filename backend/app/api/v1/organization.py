@@ -87,3 +87,39 @@ def list_cost_centers(company_id: int = 1, db: Session = Depends(get_db), _: Use
 @router.post("/cost-centers", response_model=CostCenterResponse, status_code=status.HTTP_201_CREATED)
 def create_cost_center(body: CostCenterCreate, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.create"))):
     return OrganizationService.create_cost_center(db, body)
+
+
+# --- Edit & Delete Routes ---
+@router.put("/departments/{dept_id}", response_model=DepartmentResponse, status_code=status.HTTP_200_OK)
+def update_department(dept_id: int, name: str, code: str = "", db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.update"))):
+    return OrganizationService.update_department(db, dept_id, name, code)
+
+
+@router.delete("/departments/{dept_id}", status_code=status.HTTP_200_OK)
+def delete_department(dept_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.delete"))):
+    return OrganizationService.delete_department(db, dept_id)
+
+
+@router.put("/designations/{desig_id}", response_model=DesignationResponse, status_code=status.HTTP_200_OK)
+def update_designation(desig_id: int, title: str, code: str = "", db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.update"))):
+    return OrganizationService.update_designation(db, desig_id, title, code)
+
+
+@router.delete("/designations/{desig_id}", status_code=status.HTTP_200_OK)
+def delete_designation(desig_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.delete"))):
+    return OrganizationService.delete_designation(db, desig_id)
+
+
+@router.delete("/branches/{branch_id}", status_code=status.HTTP_200_OK)
+def delete_branch(branch_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.delete"))):
+    return OrganizationService.delete_branch(db, branch_id)
+
+
+@router.delete("/companies/{company_id}", status_code=status.HTTP_200_OK)
+def delete_company(company_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.delete"))):
+    return OrganizationService.delete_company(db, company_id)
+
+
+@router.delete("/cost-centers/{cc_id}", status_code=status.HTTP_200_OK)
+def delete_cost_center(cc_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("employee.delete"))):
+    return OrganizationService.delete_cost_center(db, cc_id)

@@ -102,3 +102,21 @@ def get_attendance_summary(
     """Aggregate monthly attendance data as payable days input for the payroll calculation engine."""
     return AttendanceService.generate_attendance_summary(db, employee_id=employee_id, year_month=year_month)
 
+
+@router.delete("/{attendance_id}", status_code=status.HTTP_200_OK)
+def delete_attendance(
+    attendance_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return AttendanceService.delete_attendance(db, attendance_id)
+
+
+@router.delete("/shifts/{shift_id}", status_code=status.HTTP_200_OK)
+def delete_shift(
+    shift_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return AttendanceService.delete_shift(db, shift_id)
+

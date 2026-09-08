@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from __future__ import annotations
+from datetime import date as PyDate, datetime as PyDateTime
 from typing import Optional
 from sqlalchemy import String, Integer, Date, DateTime, Numeric, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,9 +13,10 @@ class Attendance(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     employee_id: Mapped[int] = mapped_column(Integer, ForeignKey("employees.id", ondelete="CASCADE"), nullable=False, index=True)
-    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    check_in: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    check_out: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    date: Mapped[PyDate] = mapped_column(Date, nullable=False, index=True)
+    check_in: Mapped[Optional[PyDateTime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    check_out: Mapped[Optional[PyDateTime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
     
     # Statuses: Present, Absent, Half Day, WFH, Holiday, Weekly Off, Unpaid Leave, Paid Leave
     status: Mapped[str] = mapped_column(String(50), default="Present", nullable=False, index=True)

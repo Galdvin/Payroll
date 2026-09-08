@@ -14,11 +14,13 @@ from app.models.financial_extras import (
 from app.models.employee import Employee
 from app.schemas.financial_extras import (
     LoanRequestCreate,
+    LoanRepaymentRequest,
     AdvanceRequestCreate,
     BonusIncentiveCreate,
     ReimbursementCreate,
     ReimbursementApprovalRequest,
 )
+
 
 
 class FinancialExtrasService:
@@ -216,3 +218,39 @@ class FinancialExtrasService:
         if employee_id:
             query = query.filter(Reimbursement.employee_id == employee_id)
         return query.order_by(Reimbursement.id.desc()).all()
+
+    @staticmethod
+    def delete_loan(db: Session, loan_id: int) -> dict:
+        loan = db.query(Loan).filter(Loan.id == loan_id).first()
+        if not loan:
+            raise ResourceNotFoundException("Loan", loan_id)
+        db.delete(loan)
+        db.commit()
+        return {"success": True, "message": f"Loan {loan_id} deleted successfully."}
+
+    @staticmethod
+    def delete_advance(db: Session, advance_id: int) -> dict:
+        adv = db.query(Advance).filter(Advance.id == advance_id).first()
+        if not adv:
+            raise ResourceNotFoundException("Advance", advance_id)
+        db.delete(adv)
+        db.commit()
+        return {"success": True, "message": f"Advance {advance_id} deleted successfully."}
+
+    @staticmethod
+    def delete_bonus(db: Session, bonus_id: int) -> dict:
+        bonus = db.query(BonusIncentive).filter(BonusIncentive.id == bonus_id).first()
+        if not bonus:
+            raise ResourceNotFoundException("BonusIncentive", bonus_id)
+        db.delete(bonus)
+        db.commit()
+        return {"success": True, "message": f"Bonus {bonus_id} deleted successfully."}
+
+    @staticmethod
+    def delete_reimbursement(db: Session, reimb_id: int) -> dict:
+        reimb = db.query(Reimbursement).filter(Reimbursement.id == reimb_id).first()
+        if not reimb:
+            raise ResourceNotFoundException("Reimbursement", reimb_id)
+        db.delete(reimb)
+        db.commit()
+        return {"success": True, "message": f"Reimbursement {reimb_id} deleted successfully."}

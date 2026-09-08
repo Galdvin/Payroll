@@ -1,5 +1,6 @@
 from datetime import timedelta
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Optional, Dict, Any
+
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.core.security import (
@@ -20,6 +21,30 @@ SYSTEM_PERMISSIONS = [
     ("employee.create", "employee", "Create new employee record"),
     ("employee.update", "employee", "Update employee profile"),
     ("employee.delete", "employee", "Terminate or delete employee"),
+    # Organization Management
+    ("organization.view", "organization", "View organizational structure"),
+    ("organization.create", "organization", "Create departments, branches, cost centers"),
+    ("organization.update", "organization", "Update organizational structure"),
+    ("organization.delete", "organization", "Delete organizational units"),
+    # Attendance & Leave
+    ("attendance.view", "attendance", "View attendance records"),
+    ("attendance.create", "attendance", "Log attendance and create shifts"),
+    ("attendance.update", "attendance", "Update attendance and shifts"),
+    ("attendance.delete", "attendance", "Delete attendance and shifts"),
+    ("leave.view", "leave", "View leave requests and policies"),
+    ("leave.apply", "leave", "Apply for leaves"),
+    ("leave.approve", "leave", "Approve employee leave applications"),
+    ("leave.update", "leave", "Update leave policies and types"),
+    ("leave.delete", "leave", "Delete leave applications and policies"),
+    # Salary & Financial Extras
+    ("salary.view", "salary", "View employee salary structures"),
+    ("salary.create", "salary", "Create salary components and structures"),
+    ("salary.update", "salary", "Update salary structures and components"),
+    ("salary.delete", "salary", "Delete salary components and structures"),
+    ("financial.view", "financial", "View loans, advances, bonuses, reimbursements"),
+    ("financial.create", "financial", "Create loans, bonuses, reimbursements"),
+    ("financial.update", "financial", "Update loans, bonuses, reimbursements"),
+    ("financial.delete", "financial", "Delete financial extra records"),
     # Payroll Management
     ("payroll.view", "payroll", "View payroll runs and periods"),
     ("payroll.create", "payroll", "Initiate payroll run"),
@@ -27,18 +52,26 @@ SYSTEM_PERMISSIONS = [
     ("payroll.approve", "payroll", "Approve payroll processing step"),
     ("payroll.lock", "payroll", "Lock payroll run after finalization"),
     ("payroll.process_payment", "payroll", "Generate bank payment files and mark paid"),
-    # Salary Structure
-    ("salary.view", "salary", "View employee salary structures"),
-    ("salary.update", "salary", "Update salary structures and components"),
-    # Attendance & Leave
-    ("attendance.view", "attendance", "View attendance records"),
-    ("attendance.manage", "attendance", "Manage shifts and attendance"),
-    ("leave.apply", "leave", "Apply for leaves"),
-    ("leave.approve", "leave", "Approve employee leave applications"),
+    ("payroll.delete", "payroll", "Delete payroll runs and periods"),
+    # Tax & Statutory Rules
+    ("statutory.view", "tax_statutory", "View tax and statutory rules"),
+    ("statutory.create", "tax_statutory", "Create tax and statutory rules"),
+    ("statutory.update", "tax_statutory", "Update tax and statutory rules"),
+    ("statutory.delete", "tax_statutory", "Delete tax and statutory rules"),
+    # User & Role Management
+    ("user.view", "users", "View user accounts"),
+    ("user.create", "users", "Create user accounts"),
+    ("user.update", "users", "Update user accounts"),
+    ("user.delete", "users", "Delete user accounts"),
+    ("roles.view", "roles", "View roles and permissions"),
+    ("roles.create", "roles", "Create roles and permissions"),
+    ("roles.update", "roles", "Update roles and permissions"),
+    ("roles.delete", "roles", "Delete roles"),
     # Reports & Audit
     ("reports.view", "reports", "View payroll and statutory reports"),
     ("audit.view", "audit", "Inspect security and calculation audit logs"),
 ]
+
 
 SYSTEM_ROLES = [
     ("Super Admin", "Full system access across all organizations"),

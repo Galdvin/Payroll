@@ -314,3 +314,21 @@ class AttendanceService:
         db.refresh(summary)
         return summary
 
+    @staticmethod
+    def delete_attendance(db: Session, attendance_id: int) -> dict:
+        att = db.query(Attendance).filter(Attendance.id == attendance_id).first()
+        if not att:
+            raise ResourceNotFoundException("Attendance record", attendance_id)
+        db.delete(att)
+        db.commit()
+        return {"success": True, "message": f"Attendance record {attendance_id} deleted successfully."}
+
+    @staticmethod
+    def delete_shift(db: Session, shift_id: int) -> dict:
+        shift = db.query(Shift).filter(Shift.id == shift_id).first()
+        if not shift:
+            raise ResourceNotFoundException("Shift", shift_id)
+        db.delete(shift)
+        db.commit()
+        return {"success": True, "message": f"Shift {shift_id} deleted successfully."}
+

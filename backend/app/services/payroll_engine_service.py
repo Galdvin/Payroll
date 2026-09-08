@@ -334,3 +334,19 @@ class PayrollEngineService:
             raise ResourceNotFoundException("PayrollEmployee Result", employee_id)
 
         return emp_res.calculation_trace
+
+    @staticmethod
+    def delete_payroll_run(db: Session, run_id: int) -> dict:
+        run = PayrollEngineService.get_payroll_run(db, run_id)
+        db.delete(run)
+        db.commit()
+        return {"success": True, "message": f"Payroll run {run_id} deleted successfully."}
+
+    @staticmethod
+    def delete_payroll_period(db: Session, period_id: int) -> dict:
+        period = db.query(PayrollPeriod).filter(PayrollPeriod.id == period_id).first()
+        if not period:
+            raise ResourceNotFoundException("PayrollPeriod", period_id)
+        db.delete(period)
+        db.commit()
+        return {"success": True, "message": f"Payroll period {period_id} deleted successfully."}

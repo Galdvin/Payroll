@@ -1,6 +1,8 @@
+from __future__ import annotations
 import uuid
 from datetime import date
 from typing import Optional, Dict, Any, List
+
 from sqlalchemy import String, Integer, Date, Boolean, JSON, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base

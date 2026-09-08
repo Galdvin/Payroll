@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.schemas.financial_extras import (
     LoanRequestCreate,
     LoanResponse,
+    LoanRepaymentRequest,
     AdvanceRequestCreate,
     AdvanceResponse,
     BonusIncentiveCreate,
@@ -13,6 +14,7 @@ from app.schemas.financial_extras import (
     ReimbursementResponse,
     ReimbursementApprovalRequest,
 )
+
 from app.services.financial_extras_service import FinancialExtrasService
 from app.security.permissions import RequirePermission, get_current_user
 from app.models.user import User
@@ -94,3 +96,23 @@ def approve_reimbursement(
     current_user: User = Depends(get_current_user),
 ):
     return FinancialExtrasService.approve_reimbursement(db, reimb_id=reimb_id, user_id=current_user.id, data=body)
+
+
+@router.delete("/loans/{loan_id}", status_code=status.HTTP_200_OK)
+def delete_loan(loan_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.delete_loan(db, loan_id)
+
+
+@router.delete("/advances/{advance_id}", status_code=status.HTTP_200_OK)
+def delete_advance(advance_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.delete_advance(db, advance_id)
+
+
+@router.delete("/bonuses/{bonus_id}", status_code=status.HTTP_200_OK)
+def delete_bonus(bonus_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.delete_bonus(db, bonus_id)
+
+
+@router.delete("/reimbursements/{reimb_id}", status_code=status.HTTP_200_OK)
+def delete_reimbursement(reimb_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return FinancialExtrasService.delete_reimbursement(db, reimb_id)

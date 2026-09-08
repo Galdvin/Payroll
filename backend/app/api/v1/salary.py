@@ -63,3 +63,21 @@ def revise_salary(
 @router.get("/revisions/{employee_id}", response_model=List[SalaryRevisionResponse], status_code=status.HTTP_200_OK)
 def list_salary_revisions(employee_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("salary.view"))):
     return SalaryService.get_salary_revisions(db, employee_id=employee_id)
+
+
+@router.delete("/components/{component_id}", status_code=status.HTTP_200_OK)
+def delete_component(
+    component_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("salary.update")),
+):
+    return SalaryService.delete_component(db, component_id)
+
+
+@router.delete("/structures/{structure_id}", status_code=status.HTTP_200_OK)
+def delete_structure(
+    structure_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("salary.update")),
+):
+    return SalaryService.delete_structure(db, structure_id)

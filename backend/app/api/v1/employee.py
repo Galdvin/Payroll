@@ -114,3 +114,21 @@ def upload_employee_document(
         mime_type=file.content_type or "application/pdf",
         uploaded_by_user_id=current_user.id,
     )
+
+
+@router.delete("/{employee_id}", status_code=status.HTTP_200_OK)
+def delete_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("employee.delete")),
+):
+    return EmployeeService.delete_employee(db, employee_id)
+
+
+@router.delete("/documents/{document_id}", status_code=status.HTTP_200_OK)
+def delete_employee_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("employee.delete")),
+):
+    return EmployeeService.delete_employee_document(db, document_id)

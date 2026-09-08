@@ -2,14 +2,20 @@ import io
 import zipfile
 from typing import List
 from sqlalchemy.orm import Session
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    HAS_REPORTLAB = True
+except ImportError:
+    HAS_REPORTLAB = False
+
 from app.models.payroll_run import PayrollEmployee, PayrollRun, PayrollPeriod
 from app.models.employee import Employee
 from app.models.organization import Company
 from app.core.exceptions import PayrollException
+
 
 
 def number_to_words(amount: float) -> str:
@@ -65,8 +71,12 @@ class PayslipPDFService:
     @staticmethod
     def generate_payslip_pdf(db: Session, payroll_employee: PayrollEmployee) -> bytes:
         """Generates a professional ReportLab PDF for a single employee's monthly payslip."""
+        if not HAS_REPORTLAB:
+            raise PayrollException("ReportLab package is required for PDF generation. Please run 'pip install reportlab'.", error_code="REPORTLAB_MISSING")
+
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
+
             buffer,
             pagesize=letter,
             rightMargin=36,

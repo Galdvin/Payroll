@@ -330,3 +330,30 @@ class LeaveService:
     def get_holidays(db: Session, company_id: int = 1) -> List[Holiday]:
         return db.query(Holiday).filter(Holiday.company_id == company_id).order_by(Holiday.date.asc()).all()
 
+    @staticmethod
+    def delete_leave_request(db: Session, request_id: int) -> dict:
+        req = db.query(LeaveRequest).filter(LeaveRequest.id == request_id).first()
+        if not req:
+            raise ResourceNotFoundException("LeaveRequest", request_id)
+        db.delete(req)
+        db.commit()
+        return {"success": True, "message": f"Leave request {request_id} deleted successfully."}
+
+    @staticmethod
+    def delete_leave_type(db: Session, leave_type_id: int) -> dict:
+        lt = db.query(LeaveType).filter(LeaveType.id == leave_type_id).first()
+        if not lt:
+            raise ResourceNotFoundException("LeaveType", leave_type_id)
+        db.delete(lt)
+        db.commit()
+        return {"success": True, "message": f"Leave type {leave_type_id} deleted successfully."}
+
+    @staticmethod
+    def delete_holiday(db: Session, holiday_id: int) -> dict:
+        h = db.query(Holiday).filter(Holiday.id == holiday_id).first()
+        if not h:
+            raise ResourceNotFoundException("Holiday", holiday_id)
+        db.delete(h)
+        db.commit()
+        return {"success": True, "message": f"Holiday {holiday_id} deleted successfully."}
+

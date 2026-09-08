@@ -174,3 +174,19 @@ class EmployeeService:
     def get_employee_documents(db: Session, employee_id: int) -> List[EmployeeDocument]:
         EmployeeService.get_by_id(db, employee_id)
         return db.query(EmployeeDocument).filter(EmployeeDocument.employee_id == employee_id).all()
+
+    @staticmethod
+    def delete_employee(db: Session, employee_id: int) -> dict:
+        emp = EmployeeService.get_by_id(db, employee_id)
+        db.delete(emp)
+        db.commit()
+        return {"success": True, "message": f"Employee {employee_id} deleted successfully."}
+
+    @staticmethod
+    def delete_employee_document(db: Session, document_id: int) -> dict:
+        doc = db.query(EmployeeDocument).filter(EmployeeDocument.id == document_id).first()
+        if not doc:
+            raise ResourceNotFoundException("EmployeeDocument", document_id)
+        db.delete(doc)
+        db.commit()
+        return {"success": True, "message": f"Document {document_id} deleted successfully."}

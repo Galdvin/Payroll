@@ -28,3 +28,30 @@ def list_tax_rules(country: str = "India", db: Session = Depends(get_db), _: Use
 def evaluate_tds(body: EvaluateTDSRequest, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     """Evaluate Income Tax TDS calculation and return step-by-step slab breakdown."""
     return StatutoryEngineService.calculate_tds_tax(db, gross_monthly=body.gross_monthly_salary, regime_name=body.regime_name)
+
+
+@router.delete("/statutory-rules/{rule_id}", status_code=status.HTTP_200_OK)
+def delete_statutory_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("payroll.lock")),
+):
+    return StatutoryEngineService.delete_statutory_rule(db, rule_id)
+
+
+@router.delete("/tax-rules/{rule_id}", status_code=status.HTTP_200_OK)
+def delete_tax_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("payroll.lock")),
+):
+    return StatutoryEngineService.delete_tax_rule(db, rule_id)
+
+
+@router.delete("/tax-slabs/{slab_id}", status_code=status.HTTP_200_OK)
+def delete_tax_slab(
+    slab_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("payroll.lock")),
+):
+    return StatutoryEngineService.delete_tax_slab(db, slab_id)

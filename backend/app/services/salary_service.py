@@ -231,3 +231,21 @@ class SalaryService:
     @staticmethod
     def get_salary_revisions(db: Session, employee_id: int) -> List[SalaryRevision]:
         return db.query(SalaryRevision).filter(SalaryRevision.employee_id == employee_id).order_by(SalaryRevision.id.desc()).all()
+
+    @staticmethod
+    def delete_component(db: Session, component_id: int) -> dict:
+        comp = db.query(SalaryComponent).filter(SalaryComponent.id == component_id).first()
+        if not comp:
+            raise ResourceNotFoundException("SalaryComponent", component_id)
+        db.delete(comp)
+        db.commit()
+        return {"success": True, "message": f"Salary component {component_id} deleted successfully."}
+
+    @staticmethod
+    def delete_structure(db: Session, structure_id: int) -> dict:
+        struct = db.query(SalaryStructure).filter(SalaryStructure.id == structure_id).first()
+        if not struct:
+            raise ResourceNotFoundException("SalaryStructure", structure_id)
+        db.delete(struct)
+        db.commit()
+        return {"success": True, "message": f"Salary structure {structure_id} deleted successfully."}

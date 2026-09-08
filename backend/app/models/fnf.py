@@ -1,5 +1,7 @@
+from __future__ import annotations
 from datetime import date
 from typing import Optional, Dict, Any
+
 from sqlalchemy import String, Integer, Date, Numeric, ForeignKey, Text, JSON, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base

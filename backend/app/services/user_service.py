@@ -63,3 +63,10 @@ class UserService:
         db.commit()
         db.refresh(user)
         return user
+
+    @staticmethod
+    def delete_user(db: Session, user_id: int) -> dict:
+        user = UserService.get_by_id(db, user_id)
+        db.delete(user)
+        db.commit()
+        return {"success": True, "message": f"User {user_id} deleted successfully."}

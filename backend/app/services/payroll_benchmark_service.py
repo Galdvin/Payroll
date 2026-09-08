@@ -1,7 +1,8 @@
 import time
 from typing import Dict, Any
 from app.services.payroll_engine_service import PayrollEngineService
-from app.services.tax_statutory_service import TaxStatutoryEngineService
+from app.services.statutory_engine_service import StatutoryEngineService
+
 
 
 class PayrollBenchmarkService:
@@ -69,10 +70,11 @@ class PayrollBenchmarkService:
             esi = (gross * 0.0075) if gross <= 21000.0 else 0.0
             pt = 200.0 if gross > 20000.0 else 0.0
 
-            tds_res = TaxStatutoryEngineService.evaluate_tds_tax(
+            tds_res = StatutoryEngineService.evaluate_tds_tax(
                 gross_monthly_salary=gross,
                 regime_name="New Regime"
             )
+
             tds = tds_res["monthly_tds"]
 
             ded = pf + esi + pt + tds + loan_emi

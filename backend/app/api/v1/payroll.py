@@ -82,3 +82,13 @@ def update_payroll_run_status(run_id: int, target_status: str, db: Session = Dep
     """Transition payroll run through the 12-stage approval & disbursement lifecycle."""
     return PayrollEngineService.update_run_status(db, run_id=run_id, status_str=target_status)
 
+
+@router.delete("/runs/{run_id}", status_code=status.HTTP_200_OK)
+def delete_payroll_run(run_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return PayrollEngineService.delete_payroll_run(db, run_id)
+
+
+@router.delete("/periods/{period_id}", status_code=status.HTTP_200_OK)
+def delete_payroll_period(period_id: int, db: Session = Depends(get_db), _: User = Depends(RequirePermission("payroll.create"))):
+    return PayrollEngineService.delete_payroll_period(db, period_id)
+

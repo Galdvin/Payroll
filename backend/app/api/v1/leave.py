@@ -96,3 +96,30 @@ def list_holidays(company_id: int = 1, db: Session = Depends(get_db), _: User = 
 def create_holiday(body: HolidayCreate, db: Session = Depends(get_db), _: User = Depends(RequirePermission("attendance.manage"))):
     return LeaveService.create_holiday(db, body)
 
+
+@router.delete("/requests/{request_id}", status_code=status.HTTP_200_OK)
+def delete_leave_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("leave.apply")),
+):
+    return LeaveService.delete_leave_request(db, request_id)
+
+
+@router.delete("/types/{leave_type_id}", status_code=status.HTTP_200_OK)
+def delete_leave_type(
+    leave_type_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return LeaveService.delete_leave_type(db, leave_type_id)
+
+
+@router.delete("/holidays/{holiday_id}", status_code=status.HTTP_200_OK)
+def delete_holiday(
+    holiday_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(RequirePermission("attendance.manage")),
+):
+    return LeaveService.delete_holiday(db, holiday_id)
+

@@ -1,5 +1,7 @@
+from __future__ import annotations
 import uuid
 from typing import List, Optional
+
 from sqlalchemy import String, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base

@@ -115,11 +115,15 @@ class StatutoryEngineService:
         return 0.0
 
     @staticmethod
-    def calculate_tds_tax(db: Session, gross_monthly: float, regime_name: str = "New Regime") -> Dict[str, Any]:
-        StatutoryEngineService.seed_defaults(db)
-        tax_rule = db.query(TaxRule).filter(TaxRule.regime_name == regime_name, TaxRule.is_active == True).first()
+    def calculate_tds_tax(db: Optional[Session] = None, gross_monthly_salary: float = 0.0, regime_name: str = "New Regime", gross_monthly: float = 0.0) -> Dict[str, Any]:
+        salary = gross_monthly_salary or gross_monthly
+        if db is not None:
+            StatutoryEngineService.seed_defaults(db)
+            tax_rule = db.query(TaxRule).filter(TaxRule.regime_name == regime_name, TaxRule.is_active == True).first()
+        else:
+            tax_rule = None
         
-        annual_gross = gross_monthly * 12.0
+        annual_gross = salary * 12.0
         std_ded = float(tax_rule.standard_deduction) if tax_rule else 75000.0
         taxable_annual = max(0.0, annual_gross - std_ded)
 
@@ -133,6 +137,20 @@ class StatutoryEngineService:
 
                 if taxable_annual > f_inc:
                     taxable_amount_in_slab = min(taxable_annual, t_inc) - f_inc
+                    tax_before_cess += round(taxable_amount_in_slab * rate, 2)
+        else:
+            slabs_data = [
+                (0.0, 300000.0, 0.00),
+                (300000.0, 700000.0, 0.05),
+                (700000.0, 1000000.0, 0.10),
+                (1000000.0, 1200000.0, 0.15),
+                (1200000.0, 1500000.0, 0.20),
+                (1500000.0, None, 0.30),
+            ]
+            for f_inc, t_inc, rate in slabs_data:
+                limit_upper = t_inc if t_inc else 999999999.0
+                if taxable_annual > f_inc:
+                    taxable_amount_in_slab = min(taxable_annual, limit_upper) - f_inc
                     tax_before_cess += round(taxable_amount_in_slab * rate, 2)
 
         cess_rate = float(tax_rule.cess_rate) if tax_rule else 0.04
@@ -151,3 +169,41 @@ class StatutoryEngineService:
             "regime_name": regime_name,
             "rule_version": tax_rule.rule_version if tax_rule else "v2024.1",
         }
+
+    evaluate_tds_tax = calculate_tds_tax
+
+
+    @staticmethod
+    def create_statutory_rule(db: Session, data: StatutoryRuleCreate) -> StatutoryRule:
+        rule = StatutoryRule(**data.model_dump())
+        db.add(rule)
+        db.commit()
+        db.refresh(rule)
+        return rule
+
+    @staticmethod
+    def delete_statutory_rule(db: Session, rule_id: int) -> dict:
+        rule = db.query(StatutoryRule).filter(StatutoryRule.id == rule_id).first()
+        if not rule:
+            raise ResourceNotFoundException("StatutoryRule", rule_id)
+        db.delete(rule)
+        db.commit()
+        return {"success": True, "message": f"Statutory rule {rule_id} deleted successfully."}
+
+    @staticmethod
+    def delete_tax_rule(db: Session, rule_id: int) -> dict:
+        rule = db.query(TaxRule).filter(TaxRule.id == rule_id).first()
+        if not rule:
+            raise ResourceNotFoundException("TaxRule", rule_id)
+        db.delete(rule)
+        db.commit()
+        return {"success": True, "message": f"Tax rule {rule_id} deleted successfully."}
+
+    @staticmethod
+    def delete_tax_slab(db: Session, slab_id: int) -> dict:
+        slab = db.query(TaxSlab).filter(TaxSlab.id == slab_id).first()
+        if not slab:
+            raise ResourceNotFoundException("TaxSlab", slab_id)
+        db.delete(slab)
+        db.commit()
+        return {"success": True, "message": f"Tax slab {slab_id} deleted successfully."}
