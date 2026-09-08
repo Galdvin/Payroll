@@ -24,6 +24,15 @@ def test_payroll_reports_and_analytics(client, admin_headers):
     assert "records" in reg_data
     assert reg_data["records"][0]["basic"] > 0
 
+    # Assert Payroll Register Total = Sum(Employee Payroll Results)
+    sum_gross = sum(r["gross_salary"] for r in reg_data["records"])
+    sum_deductions = sum(r["total_deductions"] for r in reg_data["records"])
+    sum_net = sum(r["net_salary"] for r in reg_data["records"])
+
+    assert round(reg_data["total_gross"], 2) == round(sum_gross, 2)
+    assert round(reg_data["total_deductions"], 2) == round(sum_deductions, 2)
+    assert round(reg_data["total_net"], 2) == round(sum_net, 2)
+
     # 3. Test PF ECR Text File Stream
     pf_resp = client.get(f"/api/v1/reports/pf-ecr/{period_id}", headers=admin_headers)
     assert pf_resp.status_code == 200

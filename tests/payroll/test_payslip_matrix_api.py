@@ -56,7 +56,8 @@ def test_slip_005_verify_deductions(client, admin_headers, employee_user):
     res = client.get(f"/api/v1/payslips/employee/{employee_user.id}/period/{period_id}", headers=admin_headers)
     data = res.json()
     deductions = data["deductions"]
-    assert len(deductions) >= 1
+    sum_deductions = sum(d["amount"] for d in deductions)
+    assert round(data["total_deductions"], 2) == round(sum_deductions, 2)
     codes = [d["code"] for d in deductions]
     assert "PF_EE" in codes
 
@@ -103,6 +104,7 @@ def test_slip_009_verify_employer_contribution(client, admin_headers, employee_u
     data = res.json()
     assert data["employer_statutory"] >= 0.0
     assert data["employer_cost"] >= data["gross_salary"]
+    assert round(data["employer_cost"], 2) == round(data["gross_salary"] + data["employer_statutory"], 2)
 
 
 def test_slip_010_employee_sees_own_payslip(client, admin_headers, employee_user):

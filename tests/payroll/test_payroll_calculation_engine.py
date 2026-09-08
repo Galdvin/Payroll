@@ -439,3 +439,27 @@ def test_pay_020_maximum_salary(client, admin_headers, db_session):
     trace = client.get(f"/api/v1/payroll/runs/{run_id}/trace/{emp.id}", headers=admin_headers).json()
     # Monthly gross = 100,000,000 / 12 = 8,333,333.33
     assert trace["step_5_final_takehome"]["gross_salary"] > 8000000.0
+
+
+def test_single_payroll_calculation_per_period(client, admin_headers, db_session):
+    """Assert that only ONE payroll calculation run is created/maintained per payroll period"""
+    from app.models.payroll_run import PayrollRun
+
+    periods_resp = client.get("/api/v1/payroll/periods", headers=admin_headers)
+    period_id = periods_resp.json()[0]["id"]
+
+    # Calculate 3 times consecutively for the same period
+    res1 = client.post("/api/v1/payroll/calculate", json={"payroll_period_id": period_id}, headers=admin_headers)
+    assert res1.status_code == 200
+
+    res2 = client.post("/api/v1/payroll/calculate", json={"payroll_period_id": period_id}, headers=admin_headers)
+    assert res2.status_code == 200
+
+    res3 = client.post("/api/v1/payroll/calculate", json={"payroll_period_id": period_id}, headers=admin_headers)
+    assert res3.status_code == 200
+
+    # Query DB to verify EXACTLY ONE payroll run exists for this period ID
+    runs = db_session.query(PayrollRun).filter(PayrollRun.payroll_period_id == period_id).all()
+    assert len(runs) == 1
+    assert runs[0].id == res3.json()["id"]
+

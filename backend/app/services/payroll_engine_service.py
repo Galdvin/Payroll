@@ -58,12 +58,13 @@ class PayrollEngineService:
         if period.status == "Locked":
             raise PayrollException("Payroll period is locked and cannot be recalculated.", error_code="PAYROLL_ALREADY_LOCKED")
 
-        existing_run = db.query(PayrollRun).filter(PayrollRun.payroll_period_id == period_id).first()
-        if existing_run:
+        # Enforce singleton constraint: Only ONE payroll run calculation per period
+        existing_runs = db.query(PayrollRun).filter(PayrollRun.payroll_period_id == period_id).all()
+        for existing_run in existing_runs:
             if existing_run.status == "Locked":
                 raise PayrollException("Payroll run is LOCKED. Modifications prohibited.", error_code="PAYROLL_ALREADY_LOCKED")
             db.delete(existing_run)
-            db.flush()
+        db.flush()
 
         employees = db.query(Employee).filter(Employee.is_active == True).all()
 
@@ -154,7 +155,9 @@ class PayrollEngineService:
             adv_obj = db.query(Advance).filter(Advance.employee_id == emp.id, Advance.status == "Approved").first()
             advance_recovery = float(adv_obj.monthly_recovery_amount) if adv_obj else 0.0
 
-            emp_statutory = round(employee_pf + ee_esi + professional_tax, 2)
+            monthly_tds = float(tds_data.get("monthly_tds", 0.0))
+
+            emp_statutory = round(employee_pf + ee_esi + professional_tax + monthly_tds, 2)
             empr_statutory = round(employer_pf + er_esi, 2)
             emp_deductions = round(emp_statutory + loan_emi + advance_recovery, 2)
 
@@ -222,26 +225,39 @@ class PayrollEngineService:
             db.add(emp_res)
             db.flush()
 
-            db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="BASIC", name="Basic Salary", full_amount=full_basic, prorated_amount=prorated_basic))
-            db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="HRA", name="House Rent Allowance", full_amount=full_hra, prorated_amount=prorated_hra))
-            db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="TRANSPORT", name="Transport Allowance", full_amount=full_transport, prorated_amount=prorated_transport))
-            db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="SPECIAL_ALLOWANCE", name="Special Allowance", full_amount=full_special, prorated_amount=prorated_special))
+            earnings_items = [
+                PayrollEarning(payroll_employee_id=emp_res.id, component_code="BASIC", name="Basic Salary", full_amount=full_basic, prorated_amount=prorated_basic),
+                PayrollEarning(payroll_employee_id=emp_res.id, component_code="HRA", name="House Rent Allowance", full_amount=full_hra, prorated_amount=prorated_hra),
+                PayrollEarning(payroll_employee_id=emp_res.id, component_code="TRANSPORT", name="Transport Allowance", full_amount=full_transport, prorated_amount=prorated_transport),
+                PayrollEarning(payroll_employee_id=emp_res.id, component_code="MEDICAL", name="Medical Allowance", full_amount=full_medical, prorated_amount=prorated_medical),
+                PayrollEarning(payroll_employee_id=emp_res.id, component_code="SPECIAL_ALLOWANCE", name="Special Allowance", full_amount=full_special, prorated_amount=prorated_special),
+            ]
             if overtime_pay > 0:
-                db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="OVERTIME", name="Overtime Pay", full_amount=overtime_pay, prorated_amount=overtime_pay))
+                earnings_items.append(PayrollEarning(payroll_employee_id=emp_res.id, component_code="OVERTIME", name="Overtime Pay", full_amount=overtime_pay, prorated_amount=overtime_pay))
             if bonus_amount > 0:
-                db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="BONUS", name="Bonus / Incentive", full_amount=bonus_amount, prorated_amount=bonus_amount))
+                earnings_items.append(PayrollEarning(payroll_employee_id=emp_res.id, component_code="BONUS", name="Bonus / Incentive", full_amount=bonus_amount, prorated_amount=bonus_amount))
             if reimb_amount > 0:
-                db.add(PayrollEarning(payroll_employee_id=emp_res.id, component_code="REIMBURSEMENT", name="Expense Reimbursement", full_amount=reimb_amount, prorated_amount=reimb_amount))
+                earnings_items.append(PayrollEarning(payroll_employee_id=emp_res.id, component_code="REIMBURSEMENT", name="Expense Reimbursement", full_amount=reimb_amount, prorated_amount=reimb_amount))
 
-            db.add(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="PF_EE", name="Employee PF", amount=employee_pf))
+            for earn in earnings_items:
+                db.add(earn)
+
+            deduction_items = []
+            if employee_pf > 0:
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="PF_EE", name="Employee PF", amount=employee_pf))
             if ee_esi > 0:
-                db.add(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="ESI_EE", name="Employee ESI", amount=ee_esi))
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="ESI_EE", name="Employee ESI", amount=ee_esi))
             if professional_tax > 0:
-                db.add(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="PT", name="Professional Tax", amount=professional_tax))
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="PT", name="Professional Tax", amount=professional_tax))
+            if monthly_tds > 0:
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="TDS", name="Income Tax (TDS)", amount=monthly_tds))
             if loan_emi > 0:
-                db.add(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="LOAN_EMI", name="Loan EMI Repayment", amount=loan_emi))
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="LOAN_EMI", name="Loan EMI Repayment", amount=loan_emi))
             if advance_recovery > 0:
-                db.add(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="ADVANCE_RECOVERY", name="Salary Advance Recovery", amount=advance_recovery))
+                deduction_items.append(PayrollDeduction(payroll_employee_id=emp_res.id, component_code="ADVANCE_RECOVERY", name="Salary Advance Recovery", amount=advance_recovery))
+
+            for ded in deduction_items:
+                db.add(ded)
 
             total_gross += gross_salary
             total_deductions += emp_deductions

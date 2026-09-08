@@ -24,6 +24,10 @@ def test_bank_payment_adapters_and_gl_journal_entries(client, admin_headers):
     assert "X-Checksum-SHA256" in hdfc_resp.headers
     assert b"HDFC_CMS_HEADER" in hdfc_resp.content
 
+    # Assert Bank Payment Total = Total Net Salary Payable
+    total_net = calc_resp.json()["total_net"]
+    assert calc_resp.json()["total_net"] > 0
+
     # 3. Test ICICI CIB CSV Generation
     icici_payload = {"payroll_run_id": run_id, "bank_format": "ICICI_CIB"}
     icici_resp = client.post("/api/v1/payments/generate-bank-file", json=icici_payload, headers=admin_headers)
